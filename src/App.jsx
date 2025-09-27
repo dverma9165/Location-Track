@@ -1,12 +1,33 @@
 import React from "react";
-import TrackLocation from "./TrackLocation";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Login from "./components/Login";
+import TrackLocation from "./components/TrackLocation";
 
-function App() {
+export default function App() {
+  const isLoggedIn = localStorage.getItem("isLoggedIn");
+
   return (
-    <div style={{ background: "#111", minHeight: "100vh", padding: "20px" }}>
-      <TrackLocation />
-    </div>
+    <Router>
+      <Routes>
+        <Route 
+          path="/" 
+          element={isLoggedIn ? <Navigate to="/trackLocation" replace /> : <Login />} 
+        />
+        <Route
+          path="/trackLocation"
+          element={isLoggedIn ? <TrackLocation /> : <Navigate to="/" replace />}
+        />
+        {/* Catch-all route - redirect based on auth status */}
+        <Route 
+          path="*" 
+          element={<Navigate to={isLoggedIn ? "/trackLocation" : "/"} replace />} 
+        />
+      </Routes>
+    </Router>
   );
 }
-
-export default App;

